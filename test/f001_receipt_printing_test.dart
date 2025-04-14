@@ -1,3 +1,4 @@
+import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_platform_interface.dart';
@@ -20,7 +21,7 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    F001ReceiptPrinting f001ReceiptPrintingPlugin = F001ReceiptPrinting();
+    F001ReceiptPrinting f001ReceiptPrintingPlugin = await F001ReceiptPrinting.initialisePrinter(paperSize: PrinterPaperSize.mm80);
     MockF001ReceiptPrintingPlatform fakePlatform = MockF001ReceiptPrintingPlatform();
     F001ReceiptPrintingPlatform.instance = fakePlatform;
 

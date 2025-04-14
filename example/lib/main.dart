@@ -1,3 +1,4 @@
+import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -17,12 +18,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  final _f001ReceiptPrintingPlugin = F001ReceiptPrinting();
+  F001ReceiptPrinting? _f001ReceiptPrintingPlugin;
 
   @override
-  void initState() {
+  void initState() async {
     super.initState();
-    initPlatformState();
+    _f001ReceiptPrintingPlugin = await F001ReceiptPrinting.initialisePrinter(paperSize: PrinterPaperSize.mm80);
+    await initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -31,8 +33,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await _f001ReceiptPrintingPlugin.getPlatformVersion() ?? 'Unknown platform version';
+      platformVersion = await _f001ReceiptPrintingPlugin?.getPlatformVersion() ?? 'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
