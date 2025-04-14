@@ -32,9 +32,9 @@ flutter:
     platforms:
       android:
         package: com.aisb.bluetooth_printing
-        pluginClass: BluetoothPrintingPlugin
+        pluginClass: BluetoothPrinterManagerPlugin
       ios:
-        pluginClass: BluetoothPrintingPlugin
+        pluginClass: BluetoothPrinterManagerPlugin
 
   # To add assets to your package, add an assets section, like this:
   # assets:
