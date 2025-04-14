@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:esc_pos_utils/esc_pos_utils.dart';
+import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +14,8 @@ import 'f001_receipt_printing_platform_interface.dart';
 
 class F001ReceiptPrinting {
   FlutterBluetoothSerial bluetoothSerial = FlutterBluetoothSerial.instance;
-  List<BluetoothDevice> bluetoothDevices = [];
-  BluetoothDevice? selectedDevice;
+  List<ReceiptPrintingDevice> bluetoothDevices = [];
+  ReceiptPrintingDevice? selectedDevice;
   BluetoothConnection? deviceConnection;
 
   final Generator generator;
@@ -42,20 +43,33 @@ class F001ReceiptPrinting {
     return F001ReceiptPrinting(generator: Generator(generatorPaperSize, profile));
   }
 
+  /// Get recommended widget width based on the provided [PrinterPaperSize] value.
+  static double getWidgetWidthFromPaperSize({required PrinterPaperSize paperSize}) {
+    switch (paperSize) {
+      case PrinterPaperSize.mm58:
+        return 350.0;
+      case PrinterPaperSize.mm80:
+        return 550.0;
+    }
+  }
+
   /// Refreshes paired Bluetooth devices list.
   ///
   /// The [bluetoothDevices] will be populated with paired devices.
-  Future<List<BluetoothDevice>> scanForDevices() async {
+  Future<List<ReceiptPrintingDevice>> scanForDevices() async {
     List<BluetoothDevice> pairedDevices = await bluetoothSerial.getBondedDevices();
+
     bluetoothDevices.clear();
-    bluetoothDevices.addAll(pairedDevices);
+    bluetoothDevices.addAll(pairedDevices.map((BluetoothDevice device) {
+      return ReceiptPrintingDevice.convertBluetoothDeviceToReceiptPrintingDevice(device: device);
+    }).toList());
     return bluetoothDevices;
   }
 
   /// Attempts to connect to a Bluetooth device based on the provided [address] value.
   ///
   /// On success, this will set the [deviceConnection] & [selectedDevice] values.
-  Future<ReceiptPrinterResponse> connectToDevice({required BluetoothDevice device}) async {
+  Future<ReceiptPrinterResponse> connectToDevice({required ReceiptPrintingDevice device}) async {
     try {
       log("[BP] Attempting to connect to device '${selectedDevice?.name ?? "NULL"}'...");
       BluetoothConnection connectAttempt = await BluetoothConnection.toAddress(device.address);
@@ -84,6 +98,9 @@ class F001ReceiptPrinting {
     }
   }
 
+  /// Prints a receipt based on the provided [Widget] data.
+  ///
+  /// Recommended to use a [Column] widget wrapped by a [SizedBox] widget with the [SizedBox.width] value declared.
   Future<ReceiptPrinterResponse> printReceipt({required Widget widgetToBeCaptured, required BuildContext context}) async {
     try {
       final ScreenshotController screenshotController = ScreenshotController();
