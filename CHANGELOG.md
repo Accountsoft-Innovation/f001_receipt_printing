@@ -1,3 +1,3 @@
-## 0.0.1
+## 1.0.0
 
-* TODO: Describe initial release.
+Added feature to connect to Bluetooth printer and print receipt as an image.
