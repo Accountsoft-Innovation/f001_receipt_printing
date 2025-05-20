@@ -1,21 +1,15 @@
 import 'dart:developer';
 
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:flutter_bluetooth_serial_ble/flutter_bluetooth_serial_ble.dart';
 
-class ReceiptPrintingDevice extends BluetoothDevice{
+class ReceiptPrintingDevice extends BluetoothDevice {
   ReceiptPrintingDevice({
-    String? name,
-    required String address,
-    BluetoothDeviceType type = BluetoothDeviceType.unknown,
-    bool isConnected = false,
-    BluetoothBondState bondState = BluetoothBondState.unknown,
-  }) : super(
-    name: name,
-    address: address,
-    type: type,
-    isConnected: isConnected,
-    bondState: bondState,
-  );
+    super.name,
+    required super.address,
+    super.type,
+    super.isConnected,
+    super.bondState,
+  });
 
   static ReceiptPrintingDevice convertBluetoothDeviceToReceiptPrintingDevice({required BluetoothDevice device}) {
     return ReceiptPrintingDevice(

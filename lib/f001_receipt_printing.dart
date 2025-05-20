@@ -7,7 +7,7 @@ import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_platform_interface.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:flutter_bluetooth_serial_ble/flutter_bluetooth_serial_ble.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:image/image.dart' as img;
 
