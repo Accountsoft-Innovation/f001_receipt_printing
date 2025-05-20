@@ -1,25 +1,27 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:typed_data';
 
-import 'package:esc_pos_utils/esc_pos_utils.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_platform_interface.dart';
+import 'package:f001_receipt_printing/f001_receipt_printing_printer.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bluetooth_serial_ble/flutter_bluetooth_serial_ble.dart';
+import 'package:flutter_thermal_printer/flutter_thermal_printer.dart';
+import 'package:flutter_thermal_printer/utils/printer.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:image/image.dart' as img;
 
 class F001ReceiptPrinting {
-  FlutterBluetoothSerial bluetoothSerial = FlutterBluetoothSerial.instance;
-  List<ReceiptPrintingDevice> bluetoothDevices = [];
-  ReceiptPrintingDevice? selectedDevice;
-  BluetoothConnection? deviceConnection;
-
+  final _thermalPrinterPlugin = FlutterThermalPrinter.instance;
+  StreamSubscription<List<Printer>>? _printersStreamSubscription;
+  List<ReceiptPrintingPrinter> bluetoothDevices = [];
+  ReceiptPrintingPrinter? selectedDevice;
+  
   final Generator generator;
+  bool connectedToPrinter = false;
 
-  F001ReceiptPrinting({required this.generator, this.selectedDevice, this.deviceConnection});
+  F001ReceiptPrinting({required this.generator, this.selectedDevice});
 
   /// Returns Plugin Version.
   Future<String?> getPlatformVersion() async {
@@ -55,29 +57,36 @@ class F001ReceiptPrinting {
   /// Refreshes paired Bluetooth devices list.
   ///
   /// The [bluetoothDevices] will be populated with paired devices.
-  Future<List<ReceiptPrintingDevice>> scanForDevices() async {
-    List<BluetoothDevice> pairedDevices = await bluetoothSerial.getBondedDevices();
+  Future<List<ReceiptPrintingPrinter>> scanForDevices() async {
+    _printersStreamSubscription?.cancel();
+    await _thermalPrinterPlugin.getPrinters(connectionTypes: [
+      ConnectionType.BLE,
+    ]);
+    
+    _printersStreamSubscription = _thermalPrinterPlugin.devicesStream.listen((List<Printer> printers) {
+      bluetoothDevices.clear();
+      bluetoothDevices.addAll(printers.map((Printer printer) {
+        return ReceiptPrintingPrinter.convertBluetoothDeviceToReceiptPrintingDevice(printer: printer);
+      }).toList());
+    });
 
-    bluetoothDevices.clear();
-    bluetoothDevices.addAll(pairedDevices.map((BluetoothDevice device) {
-      return ReceiptPrintingDevice.convertBluetoothDeviceToReceiptPrintingDevice(device: device);
-    }).toList());
     return bluetoothDevices;
   }
 
   /// Attempts to connect to a Bluetooth device based on the provided [address] value.
   ///
   /// On success, this will set the [deviceConnection] & [selectedDevice] values.
-  Future<ReceiptPrinterResponse> connectToDevice({required ReceiptPrintingDevice device}) async {
+  Future<ReceiptPrinterResponse> connectToDevice({required ReceiptPrintingPrinter device}) async {
     try {
       log("[BP] Attempting to connect to device '${selectedDevice?.name ?? "NULL"}'...");
-      BluetoothConnection connectAttempt = await BluetoothConnection.toAddress(device.address);
-      deviceConnection = connectAttempt;
+      bool connectAttempt = await _thermalPrinterPlugin.connect(device);
+      connectedToPrinter = connectAttempt;
       selectedDevice = device;
       log("[BP] Connected to device: ${selectedDevice?.name ?? "NULL"}!");
       return ReceiptPrinterResponse(actionSuccess: true);
     } catch (ex) {
       log("[BP] Bluetooth device connection attempt failed: ${ex.toString()}");
+      connectedToPrinter = false;
       return ReceiptPrinterResponse(actionSuccess: false, errorMessage: ex.toString());
     }
   }
@@ -86,11 +95,11 @@ class F001ReceiptPrinting {
   ///
   /// This action sets the [deviceConnection] & [selectedDevice] values into null.
   Future<void> disconnectFromDevice() async {
-    if (deviceConnection == null) {
+    if (!connectedToPrinter) {
       log("[BP] Already disconnected from Bluetooth device.");
     } else {
-      await deviceConnection?.finish().then((value) async {
-        deviceConnection = null;
+      _thermalPrinterPlugin.disconnect(ReceiptPrintingPrinter.convertReceiptPrintingDeviceToPrinter(receiptPrinter: selectedDevice!)).then((value) async {
+        connectedToPrinter = false;
         selectedDevice = null;
         log("[BP] Disconnected from Bluetooth device.");
       });
@@ -113,14 +122,15 @@ class F001ReceiptPrinting {
         bytes.add(Uint8List.fromList(generator.feed(1)));
       });
 
-      if (deviceConnection == null) {
+      if (!connectedToPrinter) {
         throw Exception("Connection to Printer is not established.");
       }
 
       for (var line in bytes) {
         try {
-          deviceConnection?.output.add(line);
-          await deviceConnection?.output.allSent;
+          await _thermalPrinterPlugin.printImageBytes(imageBytes: line, printer: ReceiptPrintingPrinter.convertReceiptPrintingDeviceToPrinter(receiptPrinter: selectedDevice!));
+          // deviceConnection?.output.add(line);
+          // await deviceConnection?.output.allSent;
           await Future.delayed(const Duration(milliseconds: 200));
         } catch (e) {
           rethrow;

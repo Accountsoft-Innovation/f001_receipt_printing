@@ -1,6 +1,6 @@
 name: f001_receipt_printing
 description: Flutter Package for Receipt Printing
-version: 2.0.2
+version: 2.0.3
 homepage: https://github.com/Accountsoft-Innovation/f001_receipt_printing
 
 environment:
@@ -11,10 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
-  esc_pos_utils: ^1.1.0
-  flutter_bluetooth_serial_ble: ^0.5.0
+  esc_pos_utils_plus: ^2.0.4
+  flutter_thermal_printer: ^1.2.1+1
   screenshot: ^3.0.0
-  image: ^3.3.0
+  image: ^4.5.4
 
 dev_dependencies:
   flutter_test:

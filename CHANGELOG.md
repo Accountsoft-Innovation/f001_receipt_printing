@@ -1,3 +1,7 @@
+## 2.0.3
+
+Switched from Bluetooth Serial to Bluetooth Thermal Printer library.
+
 ## 2.0.2
 
 Updated additional dependencies.

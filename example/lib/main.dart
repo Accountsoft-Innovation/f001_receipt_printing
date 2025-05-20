@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:f001_receipt_printing/f001_receipt_printing.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
+import 'package:f001_receipt_printing/f001_receipt_printing_printer.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
 
@@ -19,8 +19,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   F001ReceiptPrinting? receiptPrinterManager;
-  List<ReceiptPrintingDevice> bondedDevices = [];
-  ReceiptPrintingDevice? selectedDevice;
+  List<ReceiptPrintingPrinter> bondedDevices = [];
+  ReceiptPrintingPrinter? selectedDevice;
 
   @override
   void initState() async {
@@ -38,7 +38,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> onPrinterTap({required ReceiptPrintingDevice device}) async {
+  Future<void> onPrinterTap({required ReceiptPrintingPrinter device}) async {
     if (selectedDevice == null) {
       // First time connection.
       ReceiptPrinterResponse response = await receiptPrinterManager!.connectToDevice(device: device);
@@ -108,7 +108,7 @@ class _MyAppState extends State<MyApp> {
                     onTap: () async => await onPrinterTap(device: bondedDevices[index]),
                     child: ListTile(
                       title: Text(bondedDevices[index].name ?? "N/A", style: const TextStyle(color: Colors.black, fontSize: 14)),
-                      subtitle: Text(bondedDevices[index].address, style: const TextStyle(color: Colors.black, fontSize: 12)),
+                      subtitle: Text(bondedDevices[index].address ?? "N/A", style: const TextStyle(color: Colors.black, fontSize: 12)),
                     ),
                   );
                 },
