@@ -3,14 +3,15 @@ import 'dart:typed_data';
 
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:image/image.dart' as img;
 
+
+import 'f001_receipt_printing_enums.dart';
 import 'f001_receipt_printing_platform_interface.dart';
+import 'f001_receipt_printing_response.dart';
 
 class F001ReceiptPrinting {
   FlutterBluetoothSerial bluetoothSerial = FlutterBluetoothSerial.instance;

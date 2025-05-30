@@ -1,3 +1,3 @@
-## 1.0.0
+## 2.1.0
 
-Added feature to connect to Bluetooth printer and print receipt as an image.
+Update Screenshot library to compatible with newer flutter version
