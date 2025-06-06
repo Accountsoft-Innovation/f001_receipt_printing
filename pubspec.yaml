@@ -1,6 +1,11 @@
 name: f001_receipt_printing
+<<<<<<< Updated upstream
 description: A Flutter plugin to connect to a Bluetooth printer device, and print data as an image.
 version: 2.1.1
+=======
+description: Flutter Package for Receipt Printing
+version: 2.2.1
+>>>>>>> Stashed changes
 homepage: https://github.com/Accountsoft-Innovation/f001_receipt_printing
 
 environment:
@@ -10,10 +15,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+<<<<<<< Updated upstream
 
   plugin_platform_interface: ^2.0.2
   esc_pos_utils: ^1.1.0
   flutter_bluetooth_serial: ^0.4.0
+=======
+  plugin_platform_interface: ^2.1.8
+  esc_pos_utils_plus: ^2.0.4
+  flutter_blue_classic: ^0.0.5
+>>>>>>> Stashed changes
   screenshot: ^3.0.0
   image: ^3.3.0
 

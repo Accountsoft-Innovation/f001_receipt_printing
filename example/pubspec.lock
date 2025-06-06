@@ -8,7 +8,11 @@ packages:
       sha256: cb6a278ef2dbb298455e1a713bda08524a175630ec643a242c399c932a0a1f7d
       url: "https://pub.dev"
     source: hosted
+<<<<<<< Updated upstream
     version: "3.6.1"
+=======
+    version: "4.0.7"
+>>>>>>> Stashed changes
   async:
     dependency: transitive
     description:
@@ -72,6 +76,7 @@ packages:
       sha256: d57953e10f9f8327ce64a508a355f0b1ec902193f66288e8cb5070e7c47eeb2d
       url: "https://pub.dev"
     source: hosted
+<<<<<<< Updated upstream
     version: "1.0.6"
   esc_pos_utils:
     dependency: transitive
@@ -81,13 +86,28 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+=======
+    version: "1.0.8"
+  esc_pos_utils_plus:
+    dependency: transitive
+    description:
+      name: esc_pos_utils_plus
+      sha256: "2a22d281cb6f04600ba3ebd607ad8df03a4b2446d814007d22525bab4d50c2ff"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.4"
+>>>>>>> Stashed changes
   f001_receipt_printing:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
+<<<<<<< Updated upstream
     version: "2.1.1"
+=======
+    version: "2.2.0"
+>>>>>>> Stashed changes
   fake_async:
     dependency: transitive
     description:
@@ -96,6 +116,17 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.3"
+<<<<<<< Updated upstream
+=======
+  ffi:
+    dependency: transitive
+    description:
+      name: ffi
+      sha256: "289279317b4b16eb2bb7e271abccd4bf84ec9bdcbe999e278a94b804f5630418"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.4"
+>>>>>>> Stashed changes
   file:
     dependency: transitive
     description:
@@ -109,6 +140,7 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+<<<<<<< Updated upstream
   flutter_bluetooth_serial:
     dependency: transitive
     description:
@@ -117,6 +149,16 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.0"
+=======
+  flutter_blue_classic:
+    dependency: transitive
+    description:
+      name: flutter_blue_classic
+      sha256: "11a8062db3fa227c6df59e924edf363c7ade40986618e2d0d5a8601c02524d8d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
+>>>>>>> Stashed changes
   flutter_driver:
     dependency: transitive
     description: flutter

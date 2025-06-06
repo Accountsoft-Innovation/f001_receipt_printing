@@ -1,43 +1,60 @@
 import 'dart:developer';
-
+import 'package:flutter/material.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
 import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
+<<<<<<< Updated upstream
 import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
 
+=======
+import 'package:flutter_blue_classic/flutter_blue_classic.dart';
+>>>>>>> Stashed changes
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Receipt Printing Demo',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const ReceiptPrinterDemo(),
+    );
+  }
 }
 
+<<<<<<< Updated upstream
 class _MyAppState extends State<MyApp> {
   F001ReceiptPrinting? receiptPrinterManager;
   List<ReceiptPrintingDevice> bondedDevices = [];
   ReceiptPrintingDevice? selectedDevice;
+=======
+class ReceiptPrinterDemo extends StatefulWidget {
+  const ReceiptPrinterDemo({super.key});
+>>>>>>> Stashed changes
 
   @override
-  void initState() async {
-    super.initState();
-    try {
-      receiptPrinterManager = await F001ReceiptPrinting.initialisePrinter(paperSize: PrinterPaperSize.mm80);
-    } catch (ex) {
-      log("Error initialising Receipt Printer: ${ex.toString()}");
-    }
+  State<ReceiptPrinterDemo> createState() => _ReceiptPrinterDemoState();
+}
 
-    if (receiptPrinterManager != null) {
-      setState(() async {
-        bondedDevices.addAll(await receiptPrinterManager!.scanForDevices());
-      });
-    }
+class _ReceiptPrinterDemoState extends State<ReceiptPrinterDemo> {
+  late F001ReceiptPrinting _printer;
+  bool _isLoading = false;
+  String _status = "Not connected";
+  List<String> _deviceNames = [];
+  List<String> _foundAddresses = []; // To track duplicates
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePrinter();
   }
 
+<<<<<<< Updated upstream
   Future<void> onPrinterTap({required ReceiptPrintingDevice device}) async {
     if (selectedDevice == null) {
       // First time connection.
@@ -57,49 +74,128 @@ class _MyAppState extends State<MyApp> {
         selectedDevice = device;
       }
     }
+=======
+  Future<void> _initializePrinter() async {
+    _printer = await F001ReceiptPrinting.initialisePrinter(
+      paperSize: PrinterPaperSize.mm58,
+    );
+>>>>>>> Stashed changes
   }
 
-  Future<void> onPrintButtonTap({required BuildContext context}) async {
-    if (selectedDevice == null) {
-      log("Please select a Bluetooth device before printing.");
-    } else {
-      // Widget value can be any Flutter widget, as long as it fits on the phone screen (like a screenshot).
-      Widget receiptAsWidget = SizedBox(
-        // You can test out with your own width value if you like.
-        width: F001ReceiptPrinting.getWidgetWidthFromPaperSize(paperSize: PrinterPaperSize.mm80),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Text Row 1", style: TextStyle(color: Colors.black, fontSize: 14)),
-            Text("Text Row 2", style: TextStyle(color: Colors.black, fontSize: 18)),
-          ],
-        ),
-      );
+  Future<void> _scanDevices() async {
+    setState(() {
+      _isLoading = true;
+      _status = "Scanning...";
+      _deviceNames.clear();
+      _foundAddresses.clear();
+    });
 
-      ReceiptPrinterResponse response = await receiptPrinterManager!.printReceipt(widgetToBeCaptured: receiptAsWidget, context: context);
-      if (response.actionSuccess) {
-        log("Printing Success.");
+    await _printer.scanForDevices((device) {
+      final deviceId = device.address ?? '';
+      final displayName = device.name ?? device.address;
+
+      if (!_foundAddresses.contains(deviceId)) {
+        log("[Scan] New device found: $displayName");
+        setState(() {
+          _deviceNames.add(displayName);
+          _foundAddresses.add(deviceId);
+          _status = "Found ${_deviceNames.length} device(s)";
+        });
       } else {
-        log("Error: ${response.errorMessage}");
+        log("[Scan] Duplicate ignored: $displayName");
       }
+    });
+
+    setState(() {
+      _isLoading = false;
+      if (_deviceNames.isEmpty) _status = "No devices found";
+    });
+  }
+
+  Future<void> _connectToFirstDevice() async {
+    setState(() {
+      _isLoading = true;
+      _status = "Connecting...";
+    });
+
+    List<BluetoothDevice> devices = [];
+    await _printer.scanForDevices((device) {
+      if (!devices.any((d) => d.address == device.address)) {
+        devices.add(device);
+      }
+    });
+
+    if (devices.isEmpty) {
+      setState(() {
+        _status = "No devices to connect.";
+        _isLoading = false;
+      });
+      return;
     }
+
+    final response = await _printer.connectToDevice(device: devices.first);
+    setState(() {
+      _status = response.actionSuccess
+          ? "Connected to: ${devices.first.name ?? devices.first.address}"
+          : "Connection failed: ${response.errorMessage}";
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _disconnectFromDevice() async {
+    await _printer.disconnectFromDevice();
+    setState(() => _status = "Disconnected from printer.");
+  }
+
+  Future<void> _printReceipt() async {
+    final response = await _printer.printReceipt(
+      widgetToBeCaptured: _buildReceiptWidget(),
+      context: context,
+    );
+
+    setState(() {
+      _status = response.actionSuccess
+          ? "Receipt sent to printer"
+          : "Print failed: ${response.errorMessage}";
+    });
+  }
+
+  Widget _buildReceiptWidget() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(10),
+      width: F001ReceiptPrinting.getWidgetWidthFromPaperSize(
+        paperSize: PrinterPaperSize.mm58,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text("🏪 My Store", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("1x Apple  .............. \$2.00"),
+          Text("2x Banana .............. \$3.00"),
+          Divider(),
+          Text("Total: \$5.00", style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("Thank you! 😊"),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Receipt Printing"),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(10.0),
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      appBar: AppBar(title: const Text("Receipt Printer Example")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: _isLoading
+              ? const CircularProgressIndicator()
+              : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+<<<<<<< Updated upstream
               bondedDevices.isEmpty
                   ? const Center(child: Text("No Devices Found", style: TextStyle(color: Colors.black, fontSize: 14)))
                   : ListView.builder(
@@ -114,11 +210,32 @@ class _MyAppState extends State<MyApp> {
                 },
               ),
 
+=======
+              Text("Status: $_status", style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 20),
+>>>>>>> Stashed changes
               ElevatedButton(
-                onPressed: () async => await onPrintButtonTap(context: context),
-                child: const Text("PRINT RECEIPT", style: TextStyle(color: Colors.black, fontSize: 12),),
+                onPressed: _scanDevices,
+                child: const Text("🔍 Scan Devices"),
               ),
-
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _connectToFirstDevice,
+                child: const Text("🔌 Connect to First Device"),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _disconnectFromDevice,
+                child: const Text("❌ Disconnect"),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _printReceipt,
+                child: const Text("🖨️ Print Sample Receipt"),
+              ),
+              const SizedBox(height: 30),
+              const Text("Devices Found:", style: TextStyle(fontWeight: FontWeight.bold)),
+              ..._deviceNames.map((name) => Text(name)).toList(),
             ],
           ),
         ),
