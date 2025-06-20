@@ -1,3 +1,7 @@
+## 2.2.3
+
+Fix wrong sdk version
+
 ## 2.2.2
 
 Fix if bluetooth is not turned on scan device bug.
