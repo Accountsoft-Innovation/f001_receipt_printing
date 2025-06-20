@@ -1,6 +1,7 @@
-<<<<<<< Updated upstream
-## 2.1.1
-=======
+## 2.2.2
+
+Fix if bluetooth is not turned on scan device bug.
+
 ## 2.2.1
 
 Increase scan device performance.

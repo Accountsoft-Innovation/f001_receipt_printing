@@ -1,39 +1,18 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:typed_data';
 
-<<<<<<< Updated upstream
-import 'package:esc_pos_utils/esc_pos_utils.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-=======
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
+// import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_classic/flutter_blue_classic.dart';
->>>>>>> Stashed changes
 import 'package:screenshot/screenshot.dart';
 import 'package:image/image.dart' as img;
+import 'f001_receipt_printing_response.dart';
 import 'f001_receipt_printing_enums.dart';
 import 'f001_receipt_printing_platform_interface.dart';
 import 'f001_receipt_printing_printer.dart';
 
-<<<<<<< Updated upstream
-
-import 'f001_receipt_printing_enums.dart';
-import 'f001_receipt_printing_platform_interface.dart';
-import 'f001_receipt_printing_response.dart';
-
-class F001ReceiptPrinting {
-  FlutterBluetoothSerial bluetoothSerial = FlutterBluetoothSerial.instance;
-  List<ReceiptPrintingDevice> bluetoothDevices = [];
-  ReceiptPrintingDevice? selectedDevice;
-  BluetoothConnection? deviceConnection;
-
-  final Generator generator;
-
-  F001ReceiptPrinting({required this.generator, this.selectedDevice, this.deviceConnection});
-=======
 class F001ReceiptPrinting {
   final FlutterBlueClassic flutterBlue = FlutterBlueClassic();
 
@@ -45,7 +24,6 @@ class F001ReceiptPrinting {
   final Generator generator;
 
   F001ReceiptPrinting({required this.generator, this.selectedDevice});
->>>>>>> Stashed changes
 
   /// Returns Plugin Version.
   Future<String?> getPlatformVersion() async {
@@ -79,67 +57,77 @@ class F001ReceiptPrinting {
   }
 
   /// Refreshes paired Bluetooth devices list.
-<<<<<<< Updated upstream
-  ///
-  /// The [bluetoothDevices] will be populated with paired devices.
-  Future<List<ReceiptPrintingDevice>> scanForDevices() async {
-    List<BluetoothDevice> pairedDevices = await bluetoothSerial.getBondedDevices();
-
-    bluetoothDevices.clear();
-    bluetoothDevices.addAll(pairedDevices.map((BluetoothDevice device) {
-      return ReceiptPrintingDevice.convertBluetoothDeviceToReceiptPrintingDevice(device: device);
-    }).toList());
-    return bluetoothDevices;
-  }
-
-  /// Attempts to connect to a Bluetooth device based on the provided [address] value.
-  ///
-  /// On success, this will set the [deviceConnection] & [selectedDevice] values.
-  Future<ReceiptPrinterResponse> connectToDevice({required ReceiptPrintingDevice device}) async {
+  Future<void> scanForDevices(
+      Function(BluetoothDevice) onDeviceFound, {
+        Duration? scanDuration,
+      }) async {
     try {
-      log("[BP] Attempting to connect to device '${selectedDevice?.name ?? "NULL"}'...");
-      BluetoothConnection connectAttempt = await BluetoothConnection.toAddress(device.address);
-      deviceConnection = connectAttempt;
-      selectedDevice = device;
-      log("[BP] Connected to device: ${selectedDevice?.name ?? "NULL"}!");
-      return ReceiptPrinterResponse(actionSuccess: true);
-    } catch (ex) {
-      log("[BP] Bluetooth device connection attempt failed: ${ex.toString()}");
-=======
-  Future<void> scanForDevices(Function(BluetoothDevice) onDeviceFound) async {
-    try {
+      BluetoothAdapterState state = await flutterBlue.adapterStateNow;
 
-      final state = await flutterBlue.adapterStateNow;
       if (state != BluetoothAdapterState.on) {
         flutterBlue.turnOn();
-        await Future.delayed(const Duration(seconds: 2));
+        print("[Bluetooth] 🔄 Waiting for user to turn on Bluetooth...");
+
+        // Poll for state change
+        const maxWaitTime = Duration(seconds: 10);
+        const pollInterval = Duration(milliseconds: 500);
+        int waited = 0;
+
+        while (state != BluetoothAdapterState.on && waited < maxWaitTime.inMilliseconds) {
+          await Future.delayed(pollInterval);
+          waited += pollInterval.inMilliseconds;
+          state = await flutterBlue.adapterStateNow;
+        }
+
+        if (state != BluetoothAdapterState.on) {
+          print("[Bluetooth] ❌ Bluetooth was not turned on in time.");
+          return;
+        }
+
+        print("[Bluetooth] ✅ Bluetooth is now ON.");
       }
+
+      bool anyDeviceFound = false;
 
       final scanSubscription = flutterBlue.scanResults.listen((device) {
         final deviceId = device.address ?? '';
         final alreadyExists = bluetoothDevices.any((d) => (d.address ?? '') == deviceId);
+
         if (!alreadyExists) {
+          print("[Bluetooth] ✅ Device found: ${device.name} (${deviceId})");
+          anyDeviceFound = true;
           onDeviceFound(device);
         } else {
-          log("[Bluetooth] ⚠️ Duplicate ignored: ${device.name} (${deviceId})");
+          print("[Bluetooth] ⚠️ Duplicate ignored: ${device.name} (${deviceId})");
         }
       });
 
       flutterBlue.startScan();
-      await Future.delayed(const Duration(seconds: 20));
+
+      // Use provided duration or fallback to 5 seconds
+      await Future.delayed(scanDuration ?? const Duration(seconds: 5));
 
       flutterBlue.stopScan();
 
       try {
         await scanSubscription.cancel();
-        log("[Bluetooth] Scan subscription cancelled");
+        print("[Bluetooth] ✅ Scan subscription cancelled");
       } catch (e) {
-        log("[Bluetooth] Scan subscription cancel error: $e");
+        print("[Bluetooth] ❌ Scan subscription cancel error: $e");
+      }
+
+      if (anyDeviceFound) {
+        print("[Bluetooth] 🎉 At least one device was found.");
+      } else {
+        print("[Bluetooth] ❗ No devices found during scan.");
       }
     } catch (ex, st) {
-      log("[Bluetooth] ❌ Error during scan: $ex\n$st");
+      print("[Bluetooth] ❌ Error during scan: $ex\n$st");
     }
   }
+
+
+
 
   /// Connect to a Bluetooth classic device
   Future<ReceiptPrinterResponse> connectToDevice({required BluetoothDevice device}) async {
@@ -164,23 +152,12 @@ class F001ReceiptPrinting {
     } catch (ex) {
       log("Connection error: $ex");
       connectedToPrinter = false;
->>>>>>> Stashed changes
       return ReceiptPrinterResponse(actionSuccess: false, errorMessage: ex.toString());
     }
   }
 
   /// Disconnect from the current connected device
   Future<void> disconnectFromDevice() async {
-<<<<<<< Updated upstream
-    if (deviceConnection == null) {
-      log("[BP] Already disconnected from Bluetooth device.");
-    } else {
-      await deviceConnection?.finish().then((value) async {
-        deviceConnection = null;
-        selectedDevice = null;
-        log("[BP] Disconnected from Bluetooth device.");
-      });
-=======
     if (!connectedToPrinter || _connection == null) {
       log("Already disconnected.");
       return;
@@ -194,7 +171,6 @@ class F001ReceiptPrinting {
       log("Disconnected from device.");
     } catch (ex) {
       log("Error disconnecting: $ex");
->>>>>>> Stashed changes
     }
   }
 
@@ -222,20 +198,6 @@ class F001ReceiptPrinting {
       List<int> printData = generator.image(image);
       printData.addAll(generator.feed(2)); // feed a few lines after printing
 
-<<<<<<< Updated upstream
-      if (deviceConnection == null) {
-        throw Exception("Connection to Printer is not established.");
-      }
-
-      for (var line in bytes) {
-        try {
-          deviceConnection?.output.add(line);
-          await deviceConnection?.output.allSent;
-          await Future.delayed(const Duration(milliseconds: 200));
-        } catch (e) {
-          rethrow;
-        }
-=======
       // Send bytes in chunks to printer
       int chunkSize = 1024;
       for (int i = 0; i < printData.length; i += chunkSize) {
@@ -245,7 +207,6 @@ class F001ReceiptPrinting {
         // Write data through the connection
         // await _connection!.write(Uint8List.fromList(chunk));
         await Future.delayed(const Duration(milliseconds: 100));
->>>>>>> Stashed changes
       }
 
       return ReceiptPrinterResponse(actionSuccess: true);
@@ -257,9 +218,4 @@ class F001ReceiptPrinting {
       );
     }
   }
-<<<<<<< Updated upstream
-
 }
-=======
-}
->>>>>>> Stashed changes

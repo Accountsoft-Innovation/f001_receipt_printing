@@ -1,15 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_device.dart';
-import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
-<<<<<<< Updated upstream
-import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
-import 'package:flutter/material.dart';
-
-=======
 import 'package:flutter_blue_classic/flutter_blue_classic.dart';
->>>>>>> Stashed changes
+import 'package:f001_receipt_printing/f001_receipt_printing.dart';
+import 'package:f001_receipt_printing/f001_receipt_printing_enums.dart';
+import 'package:f001_receipt_printing/f001_receipt_printing_response.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -27,15 +22,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
-<<<<<<< Updated upstream
-class _MyAppState extends State<MyApp> {
-  F001ReceiptPrinting? receiptPrinterManager;
-  List<ReceiptPrintingDevice> bondedDevices = [];
-  ReceiptPrintingDevice? selectedDevice;
-=======
 class ReceiptPrinterDemo extends StatefulWidget {
   const ReceiptPrinterDemo({super.key});
->>>>>>> Stashed changes
 
   @override
   State<ReceiptPrinterDemo> createState() => _ReceiptPrinterDemoState();
@@ -46,7 +34,7 @@ class _ReceiptPrinterDemoState extends State<ReceiptPrinterDemo> {
   bool _isLoading = false;
   String _status = "Not connected";
   List<String> _deviceNames = [];
-  List<String> _foundAddresses = []; // To track duplicates
+  List<String> _foundAddresses = [];
 
   @override
   void initState() {
@@ -54,32 +42,10 @@ class _ReceiptPrinterDemoState extends State<ReceiptPrinterDemo> {
     _initializePrinter();
   }
 
-<<<<<<< Updated upstream
-  Future<void> onPrinterTap({required ReceiptPrintingDevice device}) async {
-    if (selectedDevice == null) {
-      // First time connection.
-      ReceiptPrinterResponse response = await receiptPrinterManager!.connectToDevice(device: device);
-      if (response.actionSuccess) {
-        selectedDevice = device;
-      }
-    } else if (selectedDevice?.address == device.address) {
-      // Tapping on connected device.
-      await receiptPrinterManager!.disconnectFromDevice();
-      selectedDevice = null;
-    } else {
-      // Tapping on different device.
-      await receiptPrinterManager!.disconnectFromDevice();
-      ReceiptPrinterResponse response = await receiptPrinterManager!.connectToDevice(device: device);
-      if (response.actionSuccess) {
-        selectedDevice = device;
-      }
-    }
-=======
   Future<void> _initializePrinter() async {
     _printer = await F001ReceiptPrinting.initialisePrinter(
       paperSize: PrinterPaperSize.mm58,
     );
->>>>>>> Stashed changes
   }
 
   Future<void> _scanDevices() async {
@@ -88,6 +54,16 @@ class _ReceiptPrinterDemoState extends State<ReceiptPrinterDemo> {
       _status = "Scanning...";
       _deviceNames.clear();
       _foundAddresses.clear();
+    });
+
+    await Future.delayed(const Duration(seconds: 1), () async {
+      // Check if Bluetooth is turned on
+      final FlutterBlueClassic flutterBlue = FlutterBlueClassic();
+      final state = await flutterBlue.adapterStateNow;
+      if (state != BluetoothAdapterState.on) {
+        log("Please Turn On Bluetooth connection");
+        return;
+      }
     });
 
     await _printer.scanForDevices((device) {
@@ -195,25 +171,8 @@ class _ReceiptPrinterDemoState extends State<ReceiptPrinterDemo> {
               : Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-<<<<<<< Updated upstream
-              bondedDevices.isEmpty
-                  ? const Center(child: Text("No Devices Found", style: TextStyle(color: Colors.black, fontSize: 14)))
-                  : ListView.builder(
-                itemBuilder: (BuildContext listCtx, int index) {
-                  return GestureDetector(
-                    onTap: () async => await onPrinterTap(device: bondedDevices[index]),
-                    child: ListTile(
-                      title: Text(bondedDevices[index].name ?? "N/A", style: const TextStyle(color: Colors.black, fontSize: 14)),
-                      subtitle: Text(bondedDevices[index].address, style: const TextStyle(color: Colors.black, fontSize: 12)),
-                    ),
-                  );
-                },
-              ),
-
-=======
               Text("Status: $_status", style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 20),
->>>>>>> Stashed changes
               ElevatedButton(
                 onPressed: _scanDevices,
                 child: const Text("🔍 Scan Devices"),
@@ -242,5 +201,4 @@ class _ReceiptPrinterDemoState extends State<ReceiptPrinterDemo> {
       ),
     );
   }
-
 }
