@@ -1,3 +1,7 @@
+## 2.2.4
+
+Add connected device to list before start scanning
+
 ## 2.2.3
 
 Fix wrong sdk version

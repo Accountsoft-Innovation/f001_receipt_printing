@@ -88,7 +88,15 @@ class F001ReceiptPrinting {
       }
 
       bool anyDeviceFound = false;
+      if (selectedDevice != null) {
+        final deviceId = selectedDevice!.address ?? '';
+        final alreadyExists = bluetoothDevices.any((d) => (d.address ?? '') == deviceId);
 
+        if (!alreadyExists) {
+          print("[Bluetooth] 🔁 Emitting previously connected device: ${selectedDevice!.name} ($deviceId)");
+          onDeviceFound(selectedDevice!);
+        }
+      }
       final scanSubscription = flutterBlue.scanResults.listen((device) {
         final deviceId = device.address ?? '';
         final alreadyExists = bluetoothDevices.any((d) => (d.address ?? '') == deviceId);
