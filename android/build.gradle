@@ -25,6 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace "plugin.aisb.f001_receipt_printing"
     compileSdkVersion 31
 
     compileOptions {

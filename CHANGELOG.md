@@ -1,3 +1,7 @@
+## 2.2.5
+
+Add print queue to manage print jobs
+
 ## 2.2.4
 
 Add connected device to list before start scanning

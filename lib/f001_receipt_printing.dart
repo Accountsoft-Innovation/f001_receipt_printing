@@ -20,10 +20,40 @@ class F001ReceiptPrinting {
   BluetoothDevice? selectedDevice;
   BluetoothConnection? _connection;
   bool connectedToPrinter = false;
+  List<PrintItem> printQueue = [];
+  bool processingQueue = false;
 
   final Generator generator;
 
   F001ReceiptPrinting({required this.generator, this.selectedDevice});
+
+  ///Processes print queue sequentially
+  Future<void> processQueue() async{
+    if(processingQueue) return;
+
+    processingQueue = true;
+
+    while(printQueue.isNotEmpty){
+      final job = printQueue.removeAt(0);
+
+      img.Image image = img.decodeImage(job.imageBytes)!;
+      log("[Process] Image decoded");
+      List<int> printData = generator.image(image);
+      printData.addAll(generator.feed(2)); // feed a few lines after printing
+      log("[Process] Prepare to send to byte");
+      // Send bytes in chunks to printer
+      int chunkSize = 1024;
+      for (int i = 0; i < printData.length; i += chunkSize) {
+        int end = (i + chunkSize > printData.length) ? printData.length : i + chunkSize;
+        List<int> chunk = printData.sublist(i, end);
+        _connection!.output.add(Uint8List.fromList(chunk));
+        // Write data through the connection
+        // await _connection!.write(Uint8List.fromList(chunk));
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
+    processingQueue = false;
+  }
 
   /// Returns Plugin Version.
   Future<String?> getPlatformVersion() async {
@@ -202,22 +232,11 @@ class F001ReceiptPrinting {
         context: context,
       );
 
-      img.Image image = img.decodeImage(capturedImageBytes)!;
-      List<int> printData = generator.image(image);
-      printData.addAll(generator.feed(2)); // feed a few lines after printing
-
-      // Send bytes in chunks to printer
-      int chunkSize = 1024;
-      for (int i = 0; i < printData.length; i += chunkSize) {
-        int end = (i + chunkSize > printData.length) ? printData.length : i + chunkSize;
-        List<int> chunk = printData.sublist(i, end);
-        _connection!.output.add(Uint8List.fromList(chunk));
-        // Write data through the connection
-        // await _connection!.write(Uint8List.fromList(chunk));
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-
+      printQueue.add(PrintItem(capturedImageBytes));
+      log("Added to queue");
+      processQueue();
       return ReceiptPrinterResponse(actionSuccess: true);
+
     } catch (ex) {
       log("Print error: $ex");
       return ReceiptPrinterResponse(
@@ -226,4 +245,10 @@ class F001ReceiptPrinting {
       );
     }
   }
+}
+
+class PrintItem{
+  final Uint8List imageBytes;
+
+  PrintItem(this.imageBytes);
 }
